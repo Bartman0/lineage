@@ -70,7 +70,7 @@ class AssignmentGrapher(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Call(self, node):
-        self.__current.calls = node.func.attr
+        self.__current.calls = (hasattr(node.func, 'id') and node.func.id) or (hasattr(node.func, 'attr') and node.func.attr)
         self.generic_visit(node)
 
     def visit_Constant(self, node):
