@@ -1,3 +1,5 @@
+from lineage import InspectLineage
+
 
 @InspectLineage
 def do_join():
