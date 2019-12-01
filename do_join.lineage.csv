@@ -1,0 +1,6 @@
+target;source;segment
+df;df1;df = df1.select('a').groupby('c')
+df3;df;df3 = df.sum()
+df4;df3;df4 = df3.join(df1)
+df4;df1;df4 = df3.join(df1)
+df4;df4;df4 = df3.join(df1)

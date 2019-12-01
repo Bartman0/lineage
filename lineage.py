@@ -1,6 +1,7 @@
 import ast
 import functools
 import inspect
+import pandas as pd
 
 
 class Expression:
@@ -81,7 +82,12 @@ class AssignmentGrapher(ast.NodeVisitor):
         return self.__expressions
 
     def lineage(self):
-        return [ (t, n, e.segment) for e in self.__expressions for t in e.targets for n in e.names ]
+        # InspectLineage is seen as a source itself, remove it from the lineage
+        return [ (t, n, e.segment) for e in self.__expressions for t in e.targets for n in e.names if n != 'InspectLineage' ]
+
+    def export(self, filename):
+        df = pd.DataFrame(self.lineage(), columns = [ 'target', 'source', 'segment' ])
+        df.to_csv(filename + ".csv", sep=';', index=False)
 
     def parse(self):
         tree = ast.parse(self.__sourcecode)
@@ -97,13 +103,14 @@ class AssignmentGrapher(ast.NodeVisitor):
 class InspectLineage:
     def __init__(self, func):
         functools.update_wrapper(self, func)
-        self.func = func
-        self.num_calls = 0
-        self.sourcelines = inspect.getsourcelines(func)
-        self.lineage = AssignmentGrapher.parse_code(''.join(self.sourcelines[0])).lineage()
+        self.__func = func
+        self.__num_calls = 0
+        self.__sourcelines = inspect.getsourcelines(func)
+        self.__grapher = AssignmentGrapher.parse_code(''.join(self.__sourcelines[0]))
+        self.__lineage = self.__grapher.lineage()
+        self.__grapher.export(str(self.__func.__name__) + ".lineage")
 
     def __call__(self, *args, **kwargs):
-        self.num_calls += 1
+        self.__num_calls += 1
         # print(f"call of {self.func.__name__!r}")
-        return self.func(*args, **kwargs)
-
+        return self.__func(*args, **kwargs)
