@@ -1,14 +1,14 @@
-from lineage import InspectLineage
+from lineage import inspect_lineage
 
 
-@InspectLineage
+@inspect_lineage("a_groupby_c")
 def do_join():
     df = df1.select('a').groupby('c')
     df3 = df.sum()
     df4 = df3.join(df1)
     return df4
 
-@InspectLineage
+@inspect_lineage("s3_read")
 def read_s3_partitions(environment, branch, schemaname, tablename, bucket):
     bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)
     logger.debug("bucket: " + bucket)

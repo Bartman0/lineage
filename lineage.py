@@ -52,16 +52,18 @@ class AssignExpression(Expression):
 
 
 class AssignmentGrapher(ast.NodeVisitor):
-    def __init__(self, sourcecode):
+    def __init__(self, id, sourcecode):
+        self.__id = id
         self.__sourcecode = sourcecode
         self.__expressions = list()
         self.__current = None
+        self.__simple = ""
 
     def visit_Assign(self, node):
         expression = AssignExpression([t.id for t in node.targets],
                                       ast.get_source_segment(self.__sourcecode, node, padded=True))
         self.__current = expression
-        self.__expressions.append(expression)
+        self.__expressions.append(self.__current)
         self.generic_visit(node)
 
     def visit_Name(self, node):
@@ -70,23 +72,40 @@ class AssignmentGrapher(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Call(self, node):
-        self.__current.calls = (hasattr(node.func, 'id') and node.func.id) or (hasattr(node.func, 'attr') and node.func.attr)
+        call = (hasattr(node.func, 'id') and node.func.id) or \
+               (hasattr(node.func, 'attr') and node.func.attr)
+        self.__current.calls = call
         self.generic_visit(node)
 
     def visit_Constant(self, node):
         self.__current.constants = node.value
         self.generic_visit(node)
 
+    def visit_Return(self, node):
+        expression = AssignExpression([ self.__id ],
+                                      ast.get_source_segment(self.__sourcecode, node, padded=True))
+        self.__current = expression
+        self.__expressions.append(self.__current)
+        self.generic_visit(node)
+
+    def visit_Expr(self, node):
+        stmt = ast.get_source_segment(self.__sourcecode, node, padded=True)
+        if not hasattr(node, 'ctx'):
+            expression = AssignExpression([ node.value.func.value.id ],
+                                          ast.get_source_segment(self.__sourcecode, node, padded=True))
+            self.__current = expression
+            self.__expressions.append(self.__current)
+            self.generic_visit(node)
+
     @property
     def expressions(self):
         return self.__expressions
 
     def lineage(self):
-        # InspectLineage is seen as a source itself, remove it from the lineage
-        return [ (t, n, e.segment) for e in self.__expressions for t in e.targets for n in e.names if n != 'InspectLineage' ]
+        return [ (t, n, e.segment) for e in self.__expressions for t in e.targets for n in e.names ]
 
     def export(self, filename):
-        df = pd.DataFrame(self.lineage(), columns = [ 'target', 'source', 'segment' ])
+        df = pd.DataFrame(self.lineage(), columns=['target', 'source', 'segment'])
         df.to_csv(filename + ".csv", sep=';', index=False)
 
     def parse(self):
@@ -95,22 +114,21 @@ class AssignmentGrapher(ast.NodeVisitor):
         return self
 
     @classmethod
-    def parse_code(self, sourcecode):
-        grapher = AssignmentGrapher(sourcecode)
+    def parse_code(self, id, sourcecode):
+        grapher = AssignmentGrapher(id, sourcecode)
         return grapher.parse()
 
 
-class InspectLineage:
-    def __init__(self, func):
-        functools.update_wrapper(self, func)
-        self.__func = func
-        self.__num_calls = 0
-        self.__sourcelines = inspect.getsourcelines(func)
-        self.__grapher = AssignmentGrapher.parse_code(''.join(self.__sourcelines[0]))
-        self.__lineage = self.__grapher.lineage()
-        self.__grapher.export(str(self.__func.__name__) + ".lineage")
+def inspect_lineage(id):
+    def decorator_lineage(func):
+        @functools.wraps(func)
+        def wrapper_lineage(*args, **kwargs):
+            return func(*args, **kwargs)
 
-    def __call__(self, *args, **kwargs):
-        self.__num_calls += 1
-        # print(f"call of {self.func.__name__!r}")
-        return self.__func(*args, **kwargs)
+        sourcelines = inspect.getsourcelines(func)
+        # skip the first line which contains the decorator itself
+        grapher = AssignmentGrapher.parse_code(id, ''.join(sourcelines[0][1:]))
+        grapher.export(id + ".lineage")
+        return wrapper_lineage
+
+    return decorator_lineage
