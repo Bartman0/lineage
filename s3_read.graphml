@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d1" for="edge" attr.name="label" attr.type="string" />
+  <key id="d0" for="node" attr.name="label" attr.type="string" />
+  <graph edgedefault="directed">
+    <node id="get_bucket_name" />
+    <node id="bucket" />
+    <node id="environment" />
+    <node id="branch" />
+    <node id="schemaname" />
+    <node id="tablename" />
+    <node id="logger" />
+    <node id="PARTITION_PREFIX" />
+    <node id="prefix" />
+    <node id="set" />
+    <node id="result" />
+    <node id="get_matching_s3_keys" />
+    <node id="partition" />
+    <node id="partition_value" />
+    <node id="len" />
+    <node id="datetime" />
+    <node id="PARTITION_FORMAT" />
+    <node id="ValueError" />
+    <node id="s3_read">
+      <data key="d0">Read the S3 partitions as defined in the bucket defined by the environment, branch, schema and tablename.</data>
+    </node>
+    <edge source="get_bucket_name" target="bucket" id="get_bucket_name_bucket_bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)">
+      <data key="d1">bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)</data>
+    </edge>
+    <edge source="bucket" target="bucket" id="bucket_bucket_bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)">
+      <data key="d1">bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)</data>
+    </edge>
+    <edge source="bucket" target="logger" id="bucket_logger_logger.debug(&quot;bucket: &quot; + bucket)">
+      <data key="d1">logger.debug("bucket: " + bucket)</data>
+    </edge>
+    <edge source="bucket" target="result" id="bucket_result_result = set()">
+      <data key="d1">result = set()</data>
+    </edge>
+    <edge source="environment" target="bucket" id="environment_bucket_bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)">
+      <data key="d1">bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)</data>
+    </edge>
+    <edge source="branch" target="bucket" id="branch_bucket_bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)">
+      <data key="d1">bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)</data>
+    </edge>
+    <edge source="schemaname" target="bucket" id="schemaname_bucket_bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)">
+      <data key="d1">bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)</data>
+    </edge>
+    <edge source="tablename" target="bucket" id="tablename_bucket_bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)">
+      <data key="d1">bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)</data>
+    </edge>
+    <edge source="logger" target="logger" id="logger_logger_logger.debug(&quot;bucket: &quot; + bucket)">
+      <data key="d1">logger.debug("bucket: " + bucket)</data>
+    </edge>
+    <edge source="logger" target="logger" id="logger_logger_logger.debug(&quot;partition candidate: &quot; + partition)">
+      <data key="d1">logger.debug("partition candidate: " + partition)</data>
+    </edge>
+    <edge source="logger" target="logger" id="logger_logger_logger.debug(&quot;partition matched: &quot; + partition_value)">
+      <data key="d1">logger.debug("partition matched: " + partition_value)</data>
+    </edge>
+    <edge source="logger" target="logger" id="logger_logger_logger.warning(f&quot;can not parse partition value for S3 key [{partition}]&quot;)">
+      <data key="d1">logger.warning(f"can not parse partition value for S3 key [{partition}]")</data>
+    </edge>
+    <edge source="PARTITION_PREFIX" target="prefix" id="PARTITION_PREFIX_prefix_prefix = PARTITION_PREFIX">
+      <data key="d1">prefix = PARTITION_PREFIX</data>
+    </edge>
+    <edge source="prefix" target="result" id="prefix_result_result = set()">
+      <data key="d1">result = set()</data>
+    </edge>
+    <edge source="prefix" target="partition_value" id="prefix_partition_value_partition_value = partition.split('/', 2)[0][len(prefix):]">
+      <data key="d1">partition_value = partition.split('/', 2)[0][len(prefix):]</data>
+    </edge>
+    <edge source="set" target="result" id="set_result_result = set()">
+      <data key="d1">result = set()</data>
+    </edge>
+    <edge source="result" target="result" id="result_result_result.add(partition_value)">
+      <data key="d1">result.add(partition_value)</data>
+    </edge>
+    <edge source="result" target="s3_read" id="result_s3_read_return result">
+      <data key="d1">return result</data>
+    </edge>
+    <edge source="get_matching_s3_keys" target="result" id="get_matching_s3_keys_result_result = set()">
+      <data key="d1">result = set()</data>
+    </edge>
+    <edge source="partition" target="logger" id="partition_logger_logger.debug(&quot;partition candidate: &quot; + partition)">
+      <data key="d1">logger.debug("partition candidate: " + partition)</data>
+    </edge>
+    <edge source="partition" target="logger" id="partition_logger_logger.warning(f&quot;can not parse partition value for S3 key [{partition}]&quot;)">
+      <data key="d1">logger.warning(f"can not parse partition value for S3 key [{partition}]")</data>
+    </edge>
+    <edge source="partition" target="partition_value" id="partition_partition_value_partition_value = partition.split('/', 2)[0][len(prefix):]">
+      <data key="d1">partition_value = partition.split('/', 2)[0][len(prefix):]</data>
+    </edge>
+    <edge source="partition_value" target="datetime" id="partition_value_datetime_datetime.strptime(partition_value, PARTITION_FORMAT)">
+      <data key="d1">datetime.strptime(partition_value, PARTITION_FORMAT)</data>
+    </edge>
+    <edge source="partition_value" target="result" id="partition_value_result_result.add(partition_value)">
+      <data key="d1">result.add(partition_value)</data>
+    </edge>
+    <edge source="partition_value" target="logger" id="partition_value_logger_logger.debug(&quot;partition matched: &quot; + partition_value)">
+      <data key="d1">logger.debug("partition matched: " + partition_value)</data>
+    </edge>
+    <edge source="len" target="partition_value" id="len_partition_value_partition_value = partition.split('/', 2)[0][len(prefix):]">
+      <data key="d1">partition_value = partition.split('/', 2)[0][len(prefix):]</data>
+    </edge>
+    <edge source="datetime" target="datetime" id="datetime_datetime_datetime.strptime(partition_value, PARTITION_FORMAT)">
+      <data key="d1">datetime.strptime(partition_value, PARTITION_FORMAT)</data>
+    </edge>
+    <edge source="PARTITION_FORMAT" target="datetime" id="PARTITION_FORMAT_datetime_datetime.strptime(partition_value, PARTITION_FORMAT)">
+      <data key="d1">datetime.strptime(partition_value, PARTITION_FORMAT)</data>
+    </edge>
+    <edge source="ValueError" target="logger" id="ValueError_logger_logger.debug(&quot;partition matched: &quot; + partition_value)">
+      <data key="d1">logger.debug("partition matched: " + partition_value)</data>
+    </edge>
+  </graph>
+</graphml>

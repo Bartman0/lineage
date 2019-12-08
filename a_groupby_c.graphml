@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d1" for="edge" attr.name="label" attr.type="string" />
+  <key id="d0" for="node" attr.name="label" attr.type="string" />
+  <graph edgedefault="directed">
+    <node id="df1" />
+    <node id="df" />
+    <node id="df3" />
+    <node id="df4" />
+    <node id="a_groupby_c">
+      <data key="d0">Group data based on 'c', summarize 'table X' and join this with 'table Y'</data>
+    </node>
+    <edge source="df1" target="df" id="df1_df_df = df1.select('a').groupby('c')">
+      <data key="d1">df = df1.select('a').groupby('c')</data>
+    </edge>
+    <edge source="df1" target="df4" id="df1_df4_df4 = df3.join(df1)">
+      <data key="d1">df4 = df3.join(df1)</data>
+    </edge>
+    <edge source="df" target="df3" id="df_df3_df3 = df.sum()">
+      <data key="d1">df3 = df.sum()</data>
+    </edge>
+    <edge source="df3" target="df4" id="df3_df4_df4 = df3.join(df1)">
+      <data key="d1">df4 = df3.join(df1)</data>
+    </edge>
+    <edge source="df4" target="a_groupby_c" id="df4_a_groupby_c_return df4">
+      <data key="d1">return df4</data>
+    </edge>
+  </graph>
+</graphml>

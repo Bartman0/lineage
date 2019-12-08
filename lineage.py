@@ -2,6 +2,7 @@ import ast
 import functools
 import inspect
 import pandas as pd
+import networkx as nx
 
 
 class Expression:
@@ -10,13 +11,14 @@ class Expression:
 
 
 class AssignExpression(Expression):
-    def __init__(self, targets, segment):
+    def __init__(self, targets, segment, doc=None):
         super().__init__()
         self.__targets = targets
         self.__segment = segment
         self.__names = list()
         self.__calls = list()
         self.__constants = list()
+        self.__doc = doc
 
     @property
     def targets(self):
@@ -50,6 +52,14 @@ class AssignExpression(Expression):
     def constants(self, name):
         self.__constants.append(name)
 
+    @property
+    def doc(self):
+        return self.__doc
+
+    @doc.setter
+    def doc(self, doc):
+        self.__doc = doc
+
 
 class AssignmentGrapher(ast.NodeVisitor):
     def __init__(self, id, sourcecode):
@@ -57,13 +67,17 @@ class AssignmentGrapher(ast.NodeVisitor):
         self.__sourcecode = sourcecode
         self.__expressions = list()
         self.__current = None
-        self.__simple = ""
+        self.__doc = None
 
     def visit_Assign(self, node):
         expression = AssignExpression([t.id for t in node.targets],
                                       ast.get_source_segment(self.__sourcecode, node, padded=True))
         self.__current = expression
         self.__expressions.append(self.__current)
+        self.generic_visit(node)
+
+    def visit_FunctionDef(self, node):
+        self.__doc = ast.get_docstring(node)
         self.generic_visit(node)
 
     def visit_Name(self, node):
@@ -83,14 +97,14 @@ class AssignmentGrapher(ast.NodeVisitor):
 
     def visit_Return(self, node):
         expression = AssignExpression([ self.__id ],
-                                      ast.get_source_segment(self.__sourcecode, node, padded=True))
+                                      ast.get_source_segment(self.__sourcecode, node, padded=True),
+                                      self.__doc)
         self.__current = expression
         self.__expressions.append(self.__current)
         self.generic_visit(node)
 
     def visit_Expr(self, node):
-        stmt = ast.get_source_segment(self.__sourcecode, node, padded=True)
-        if not hasattr(node, 'ctx'):
+        if not hasattr(node, 'ctx') and hasattr(node, 'value') and hasattr(node.value, 'func'):
             expression = AssignExpression([ node.value.func.value.id ],
                                           ast.get_source_segment(self.__sourcecode, node, padded=True))
             self.__current = expression
@@ -102,11 +116,18 @@ class AssignmentGrapher(ast.NodeVisitor):
         return self.__expressions
 
     def lineage(self):
-        return [ (t, n, e.segment) for e in self.__expressions for t in e.targets for n in e.names ]
+        return [ (t, n, e.segment, e.doc) for e in self.__expressions for t in e.targets for n in e.names ]
+
+    def edges(self):
+        # source, target, key, attributes
+        return [ (n, t, n+"_"+t+"_"+e.segment, { "label": e.segment } ) for e in self.__expressions for t in e.targets for n in e.names ]
 
     def export(self, filename):
-        df = pd.DataFrame(self.lineage(), columns=['target', 'source', 'segment'])
-        df.to_csv(filename + ".csv", sep=';', index=False)
+        G = nx.MultiDiGraph()
+        G.add_edges_from(self.edges())
+        # add doc to id node
+        G.nodes[self.__id]['label'] = self.__doc
+        nx.write_graphml(G, filename)
 
     def parse(self):
         tree = ast.parse(self.__sourcecode)
@@ -128,7 +149,7 @@ def inspect_lineage(id):
         sourcelines = inspect.getsourcelines(func)
         # skip the first line which contains the decorator itself
         grapher = AssignmentGrapher.parse_code(id, ''.join(sourcelines[0][1:]))
-        grapher.export(id + ".lineage")
+        grapher.export(id + ".graphml")
         return wrapper_lineage
 
     return decorator_lineage

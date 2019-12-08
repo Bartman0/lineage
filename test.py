@@ -3,6 +3,7 @@ from lineage import inspect_lineage
 
 @inspect_lineage("a_groupby_c")
 def do_join():
+    """Group data based on 'c', summarize 'table X' and join this with 'table Y'"""
     df = df1.select('a').groupby('c')
     df3 = df.sum()
     df4 = df3.join(df1)
@@ -10,6 +11,7 @@ def do_join():
 
 @inspect_lineage("s3_read")
 def read_s3_partitions(environment, branch, schemaname, tablename, bucket):
+    """Read the S3 partitions as defined in the bucket defined by the environment, branch, schema and tablename."""
     bucket = get_bucket_name(environment, branch, schemaname, tablename, bucket)
     logger.debug("bucket: " + bucket)
     prefix = PARTITION_PREFIX  # PARTITION_COLUMN + "="
